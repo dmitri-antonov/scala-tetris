@@ -1,32 +1,47 @@
 package com.myapp
 
-import java.util.Date
-
 import android.app.Activity
+import android.content.pm.ActivityInfo
 import android.os.Bundle
-import android.view.View
-import android.widget.{Button, Toast}
+import android.widget.Toast
 
-class MainActivity extends Activity with View.OnClickListener {
-
-  var button: Button = null
+class MainActivity extends Activity {
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
-    button = new Button(this)
-    button.setOnClickListener(this)
-    updateTime()
-    setContentView(button)
+
+    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR)
+
+    setContentView(new GameField(getApplicationContext))
+  }
+
+  override def onDestroy(): Unit = {
+    super.onDestroy()
+    Toast.makeText(getBaseContext, "onDestroy", Toast.LENGTH_LONG).show()
+  }
+
+  override def onStart(): Unit = {
+    super.onStart()
+    Toast.makeText(getBaseContext, "onStart", Toast.LENGTH_LONG).show()
+  }
+
+  override def onStop(): Unit = {
+    super.onStop()
+    Toast.makeText(getBaseContext, "onStop", Toast.LENGTH_LONG).show()
+  }
+
+  override def onRestart(): Unit = {
+    super.onRestart()
+    Toast.makeText(getBaseContext, "onRestart", Toast.LENGTH_LONG).show()
   }
 
   override def onPause() = {
     super.onPause()
-    Toast.makeText(getBaseContext, "SUDA PODOSHEL!", Toast.LENGTH_LONG).show()
+    Toast.makeText(getBaseContext, "onPause", Toast.LENGTH_LONG).show()
   }
 
-  override def onClick(view: View): Unit = {
-    updateTime()
+  override def onResume(): Unit = {
+    super.onResume()
+    Toast.makeText(getBaseContext, "onResume", Toast.LENGTH_LONG).show()
   }
-
-  def updateTime() = button.setText(new Date().toString)
 }

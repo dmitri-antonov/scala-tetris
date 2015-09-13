@@ -35,4 +35,10 @@ libraryDependencies ++= Seq(
 
 unmanagedClasspath in Test ++= (bootClasspath in Android).value
 
+useProguard in Android := true
+
+proguardScala in Android := true
+
 proguardOptions in Android += "-keepattributes Signature"
+proguardOptions in Android ++= scala.io.Source.fromFile(baseDirectory.value.getAbsolutePath+"/proguard.cfg").
+  getLines().toSeq.filter(a=>{! a.trim.isEmpty && ! a.contains("#")}).map(a=>{println(a); a})
