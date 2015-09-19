@@ -5,14 +5,16 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.widget.Toast
 
-class MainActivity extends Activity {
+class TetrisActivity extends Activity {
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
 
     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR)
 
-    setContentView(new GameField(getApplicationContext))
+    val gameField = new GameField(getApplicationContext)
+    setContentView(gameField)
+    gameField.updateUI()
   }
 
   override def onDestroy(): Unit = {

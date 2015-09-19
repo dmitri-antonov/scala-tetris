@@ -1,18 +1,12 @@
 package com.myapp
 
-object Position {
-  val BLOCK_SIDE   = 30
-  val BLOCK_MARGIN = 3
-}
 
 case class Position(x: Int, y: Int) {
-  require(x >= 0)
-  require(y >= 0)
+  //require(x >= 0)
+  //require(y >= 0)
 
-  import Position._
-
-  def up    = Position(x, y - BLOCK_SIDE)
-  def down  = Position(x, y + BLOCK_SIDE)
-  def left  = Position(x - BLOCK_SIDE, y)
-  def right = Position(x + BLOCK_SIDE, y)
+  def up    = Position(x, y - 1)
+  def down  = Position(x, y + 1)
+  def left  = Position(x - 1, y)
+  def right = Position(x + 1, y)
 }
