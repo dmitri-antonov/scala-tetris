@@ -1,4 +1,4 @@
-package com.myapp
+package com.scalagames.tetris
 
 object Shapes {
 
@@ -10,9 +10,10 @@ object Shapes {
 
   sealed trait Shape {
 
-    /* the position of the top left block of the rectangle to which the shape belongs */
+    /** the position of the top left block of the rectangle to which the shape belongs */
     val position: Position
-    
+
+    /** the blocks the shape consists of */
     val blocks: List[Block]
 
     def left: Position   = blocks.sortWith(_.position.x < _.position.x).head.position
@@ -104,9 +105,9 @@ object Shapes {
     }
   }
 
-  /*  XXX
-   *  X
-   */
+  /**  XXX
+    *  X
+    */
   case class LShape1(position: Position, color: Int, orientation: Orientation = Up) extends Shape {
 
     override val blocks = orientation match {
@@ -146,9 +147,9 @@ object Shapes {
     }
   }
 
-  /*  XXX
-   *    X
-   */
+  /**  XXX
+    *    X
+    */
   case class LShape2(position: Position, color: Int, orientation: Orientation = Up) extends Shape {
 
     override val blocks = orientation match {

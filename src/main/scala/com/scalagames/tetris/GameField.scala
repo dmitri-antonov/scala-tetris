@@ -1,4 +1,4 @@
-package com.myapp
+package com.scalagames.tetris
 
 import android.content.Context
 import android.graphics.Paint.Align
@@ -7,8 +7,8 @@ import android.os.{Message, Looper, Handler}
 import android.util.Log
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.{GestureDetector, MotionEvent, View}
-import android.view.View.{OnClickListener, OnTouchListener, OnLongClickListener}
-import com.myapp.Shapes.Shape
+import android.view.View.OnTouchListener
+import com.scalagames.tetris.Shapes.Shape
 
 import scala.concurrent.duration._
 
@@ -75,15 +75,15 @@ class GameField(context: Context) extends View(context) {
     override def onSwipeRight() { notifyCalculator(Calculator.MoveRight) }
     override def onSwipeUp()    { notifyCalculator(Calculator.Rotate) }
     override def onSwipeDown()  { notifyCalculator(Calculator.MoveDown) }
-    
-    def notifyCalculator(cmd: Calculator.UserCommand) {
-      val m = new Message
-      m.obj = cmd
-      calculatorState.calculator.handler.foreach(_ sendMessage m)
-    }
   }
 
-  private def requestRestartGame(): Unit = {
+  def notifyCalculator(cmd: Calculator.UserCommand) {
+    val m = new Message
+    m.obj = cmd
+    calculatorState.calculator.handler.foreach(_ sendMessage m)
+  }
+
+  private def requestRestartGame() {
     val m = new Message
     m.obj = Restart
     uiHandler sendMessage m
@@ -127,6 +127,7 @@ class GameField(context: Context) extends View(context) {
 
     paint.setARGB(200, 254, 0, 0)
     paint.setTextAlign(Align.CENTER)
+    paint.setAntiAlias(true)
     paint.setTextSize(50)
     val xPos = canvas.getWidth / 2
     val yPos = (canvas.getHeight / 2) - ((paint.descent + paint.ascent) / 2)

@@ -1,13 +1,16 @@
+name := "tetris"
+
+version := "1.0"
+
+scalaVersion := "2.11.7"
+
 minSdkVersion in Android := "15"
 
 targetSdkVersion in Android := "21"
 
 platformTarget in Android := "android-21"
 
-//buildToolsVersion in Android := Some("21.1.1")
 buildToolsVersion in Android := Some("23.0.1")
-
-scalaVersion := "2.11.7"
 
 javacOptions ++= Seq(
   "-source", "1.7",
@@ -17,6 +20,11 @@ javacOptions ++= Seq(
 )
 
 scalacOptions ++= Seq(
+  "-Xfatal-warnings",
+  "-Xlint",
+  "-Ywarn-unused-import",
+  //"-Ywarn-value-discard",
+  "-Ywarn-dead-code",
   "-target:jvm-1.7",
   "-encoding", "UTF-8",
   "-feature",

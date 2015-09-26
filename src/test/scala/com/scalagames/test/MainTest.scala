@@ -1,7 +1,7 @@
-package com.myapp.test
+package com.scalagames.test
 
 import android.widget.TextView
-import com.myapp.{TetrisActivity, R}
+import com.scalagames.{TetrisActivity, R}
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config

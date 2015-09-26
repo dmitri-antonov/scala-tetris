@@ -1,5 +1,4 @@
-package com.myapp
-
+package com.scalagames.tetris
 
 case class Position(x: Int, y: Int) {
   def up    = Position(x, y - 1)

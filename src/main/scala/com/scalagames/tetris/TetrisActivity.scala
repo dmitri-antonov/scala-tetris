@@ -1,4 +1,4 @@
-package com.myapp
+package com.scalagames.tetris
 
 import android.app.Activity
 import android.content.pm.ActivityInfo

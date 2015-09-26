@@ -1,4 +1,4 @@
-package com.myapp
+package com.scalagames.tetris
 
 import android.graphics.Color
 

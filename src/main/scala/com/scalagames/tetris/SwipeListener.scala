@@ -1,4 +1,4 @@
-package com.myapp
+package com.scalagames.tetris
 
 import android.content.Context
 import android.view.GestureDetector.SimpleOnGestureListener

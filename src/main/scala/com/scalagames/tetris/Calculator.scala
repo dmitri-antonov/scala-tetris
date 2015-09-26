@@ -1,13 +1,12 @@
-package com.myapp
+package com.scalagames.tetris
 
 import android.graphics.Color
-import android.os.{Message, Looper, Handler}
-import android.util.Log
-import android.widget.Toast
-import com.myapp.Shapes.Shape
+import android.os.{Handler, Looper, Message}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Random
+
+import com.scalagames.tetris.Shapes.Shape
 
 object Calculator {
   sealed trait Event
@@ -64,8 +63,8 @@ class Calculator(gameFieldSize: => GameField.GameFieldSize, uiHandler: Handler, 
 
   private def makeNewShape: Shape = {
 
-    import Shapes._
     import Color._
+    import Shapes._
 
     val p = Position(gameFieldSize.width / 2 - 1, 0)
 
