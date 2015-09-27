@@ -3,7 +3,7 @@ package com.scalagames.tetris
 import android.graphics.Color
 import android.os.{Handler, Looper, Message}
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 import scala.util.Random
 
 import com.scalagames.tetris.Shapes.Shape
@@ -17,11 +17,19 @@ object Calculator {
   case object MoveDown extends UserCommand
   case object Rotate extends UserCommand
 
+  case object Pause extends UserCommand
+  case object Resume extends UserCommand
+
   case object Tick extends Event
   case object GameOver extends Event
 }
 
-case class GameState(thePile: List[Block], shape: Option[Shape], gameOver: Boolean = false)
+case class GameState(thePile:     List[Block]    = Nil,
+                     shape:       Option[Shape]  = None,
+                     gameOver:    Boolean        = false,
+                     paused:      Boolean        = false,
+                     elapsedTime: FiniteDuration = 0 seconds,
+                     score:       Int            = 0)
 
 class Calculator(gameFieldSize: => GameField.GameFieldSize, uiHandler: Handler, period: FiniteDuration) extends Runnable {
 
@@ -29,12 +37,12 @@ class Calculator(gameFieldSize: => GameField.GameFieldSize, uiHandler: Handler, 
 
   var handler: Option[Handler] = None
 
-  private var gameState = GameState(thePile = Nil, shape = None)
+  private var gameState = GameState()
 
   private def updateUI(gameState: GameState) {
     val m = new Message
     m.obj = GameField.UiChanged(gameState)
-    uiHandler.sendMessage(m)
+    uiHandler sendMessage m
   }
 
   private def reduceThePile(reducibleRows: List[Int]) {
@@ -47,6 +55,8 @@ class Calculator(gameFieldSize: => GameField.GameFieldSize, uiHandler: Handler, 
       gameState = gameState.copy(thePile = newPileMovedDown)
       updateUI(gameState)
     }
+
+    gameState = gameState.copy(score = gameState.score + Math.pow(reducibleRows.size, 2).toInt)
   }
 
   private def gameOver() {
@@ -120,6 +130,8 @@ class Calculator(gameFieldSize: => GameField.GameFieldSize, uiHandler: Handler, 
       case (MoveLeft,  Some(s)) => gameState.copy(shape = Some(if (canPlace(s.moveLeft)) s.moveLeft else s))
       case (MoveRight, Some(s)) => gameState.copy(shape = Some(if (canPlace(s.moveRight)) s.moveRight else s))
       case (Rotate,    Some(s)) => gameState.copy(shape = Some(if (canPlace(s.rotateClockwise)) s.rotateClockwise else s))
+      case (Pause, _)  => gameState.copy(paused = true)
+      case (Resume, _) => tick(); gameState.copy(paused = false)
       case _ => gameState
     }
 
@@ -141,9 +153,13 @@ class Calculator(gameFieldSize: => GameField.GameFieldSize, uiHandler: Handler, 
     handler = Some(new Handler {
       override def handleMessage(msg: Message) = msg.obj match {
         case m: UserCommand if !gameState.gameOver => handleUserCommand(m)
-        case Tick           if !gameState.gameOver => handleTick(); tick()
-        case GameOver       => gameState = gameState.copy(gameOver = true); updateUI(gameState)
-        case _              =>
+        case Tick           if  gameState.paused   => /** nothing to do */
+        case Tick           if !gameState.gameOver =>
+          gameState = gameState.copy(elapsedTime = gameState.elapsedTime + period)
+          handleTick()
+          tick()
+        case GameOver => gameState = gameState.copy(gameOver = true); updateUI(gameState)
+        case _        =>
       }
     })
     tick()
