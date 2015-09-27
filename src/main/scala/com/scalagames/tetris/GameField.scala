@@ -23,19 +23,20 @@ object GameField {
 class GameField(context: Context) extends View(context) {
 
   import GameField._
-  
+
+  val scoreBarHeight = 30
+  val margin         = 1
+  val widthInBlocks  = 10
+  val blockMargin    = 1
+
   lazy val heightInPixels = getHeight
   lazy val widthInPixels  = getWidth
-
-  val margin        = 1
-  val widthInBlocks = 10
-  val blockMargin   = 1
 
   lazy val blockSize      = (widthInPixels - 2 * margin) / widthInBlocks
   lazy val heightInBlocks = (heightInPixels - 2 * margin) / blockSize
 
-  lazy val horizontalPadding = (widthInPixels - 2 * margin) % widthInBlocks
-  lazy val verticalPadding   = (heightInPixels - 2 * margin) % heightInBlocks
+  lazy val horizontalPadding = (widthInPixels - 2 * margin) % blockSize
+  lazy val verticalPadding   = (heightInPixels - 2 * margin) % blockSize
 
   lazy val leftPadding   = horizontalPadding / 2
   lazy val rightPadding  = horizontalPadding - leftPadding
@@ -91,6 +92,8 @@ class GameField(context: Context) extends View(context) {
 
   private def drawBoundary(canvas: Canvas) {
     val paint = new Paint
+    paint.setColor(Color.BLACK)
+    canvas.drawRect(0, 0, widthInPixels, heightInPixels, paint)
     paint.setColor(boundaryColor)
     canvas.drawRect(leftPadding, topPadding, widthInPixels - rightPadding, heightInPixels - bottomPadding, paint)
     paint.setColor(fieldColor)
@@ -123,7 +126,7 @@ class GameField(context: Context) extends View(context) {
     paint.getTextBounds(text, 0, text.length, rect)
     paint.setColor(Color.BLACK)
 
-    canvas.drawRect(rect, paint)
+    //canvas.drawRect(rect, paint)
 
     paint.setARGB(200, 254, 0, 0)
     paint.setTextAlign(Align.CENTER)
@@ -136,6 +139,9 @@ class GameField(context: Context) extends View(context) {
 
   override def onDraw(canvas: Canvas) {
     super.onDraw(canvas)
+
+    //Log.e("test", s"vertBlocks = $heightInBlocks, vertPad = $verticalPadding, topPad = $topPadding, botPad = $bottomPadding")
+    Log.e("test", s"widthPix = $widthInPixels, heightPix = $heightInPixels")
 
     if (gameState.gameOver) {
       Log.e("test", "the game is over")
