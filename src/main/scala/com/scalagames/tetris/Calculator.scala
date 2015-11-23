@@ -24,51 +24,34 @@ object Calculator {
   case object GameOver extends Event
 }
 
-case class GameState(thePile:     List[Block]    = Nil,
-                     shape:       Option[Shape]  = None,
-                     gameOver:    Boolean        = false,
-                     paused:      Boolean        = false,
-                     elapsedTime: FiniteDuration = 0 seconds,
-                     score:       Int            = 0)
 
-class Calculator(gameFieldSize: => GameField.GameFieldSize, uiHandler: Handler, period: FiniteDuration) extends Runnable {
+class Calculator(gameFieldSize: => GameField.GameFieldSize,
+                 ui: UI,
+                 period: FiniteDuration,
+                 initialGameState: GameState) {
 
   import Calculator._
 
-  var handler: Option[Handler] = None
-
-  private var gameState = GameState()
-
-  private def updateUI(gameState: GameState) {
-    val m = new Message
-    m.obj = GameField.UiChanged(gameState)
-    uiHandler sendMessage m
-  }
+  var gameState = initialGameState
 
   private def reduceThePile(reducibleRows: List[Int]) {
     reducibleRows foreach { y =>
       val newPile = gameState.thePile.filter(_.position.y != y)
       gameState = gameState.copy(thePile = newPile)
-      updateUI(gameState)
+      ui.update(gameState)
 
-      val newPileMovedDown = newPile map (b => if (b.position.y < y) Block(Position(b.position.x, b.position.y + 1), b.color)  else b)
+      val newPileMovedDown = newPile map (b => if (b.position.y < y) Block(Position(b.position.x, b.position.y + 1), b.color) else b)
       gameState = gameState.copy(thePile = newPileMovedDown)
-      updateUI(gameState)
+      ui.update(gameState)
     }
 
     gameState = gameState.copy(score = gameState.score + Math.pow(reducibleRows.size, 2).toInt)
   }
 
-  private def gameOver() {
-    val m = new Message
-    m.obj = GameOver
-    handler.foreach(_ sendMessage m)
-  }
-
-  private def tick() {
-    val m = new Message
-    m.obj = Tick
-    handler.foreach(_.sendMessageDelayed(m, period.toMillis))
+  private def gameOver(): GameState = {
+    gameState = gameState.copy(gameOver = true, shape = None)
+    ui.update(gameState)
+    gameState
   }
 
   private def makeNewShape: Shape = {
@@ -79,15 +62,15 @@ class Calculator(gameFieldSize: => GameField.GameFieldSize, uiHandler: Handler, 
     val p = Position(gameFieldSize.width / 2 - 1, 0)
 
     val colors = List(RED, GREEN, BLUE, CYAN, YELLOW, MAGENTA)
-    val color  = Random.shuffle(colors).head
+    val color = Random.shuffle(colors).head
 
     val shapes = List(LShape1(p, color),
-                      LShape2(p, color),
-                      SquareShape(p, color),
-                      PlankShape(p, color),
-                      TShape(p, color),
-                      SShape1(p, color),
-                      SShape2(p, color))
+      LShape2(p, color),
+      SquareShape(p, color),
+      PlankShape(p, color),
+      TShape(p, color),
+      SShape1(p, color),
+      SShape2(p, color))
 
     Random.shuffle(shapes).head
   }
@@ -113,26 +96,25 @@ class Calculator(gameFieldSize: => GameField.GameFieldSize, uiHandler: Handler, 
       gameState.copy(shape = Some(makeNewShape))
     else {
       gameOver()
-      gameState.copy(shape = None)
     }
   }
 
   private def canPlace(shape: Shape): Boolean =
     shape.blocks.forall(!gameState.thePile.toSeq.contains(_)) &&
-    (shape.bottom.y <= gameFieldSize.height - 1) &&
-    (shape.left.x >= 0) &&
-    (shape.right.x <= gameFieldSize.width - 1)
+      (shape.bottom.y <= gameFieldSize.height - 1) &&
+      (shape.left.x >= 0) &&
+      (shape.right.x <= gameFieldSize.width - 1)
 
 
-  private def handleUserCommand(cmd: UserCommand) {
+  def handleUserCommand(cmd: UserCommand) {
     gameState = (cmd, gameState.shape) match {
-      case (MoveDown,  Some(s)) => if (canPlace(s.moveDown)) gameState.copy(shape = Some(s.moveDown)) else addShapeToThePile(s)
-      case (MoveLeft,  Some(s)) => gameState.copy(shape = Some(if (canPlace(s.moveLeft)) s.moveLeft else s))
+      case (MoveDown, Some(s))  => if (canPlace(s.moveDown)) gameState.copy(shape = Some(s.moveDown)) else addShapeToThePile(s)
+      case (MoveLeft, Some(s))  => gameState.copy(shape = Some(if (canPlace(s.moveLeft)) s.moveLeft else s))
       case (MoveRight, Some(s)) => gameState.copy(shape = Some(if (canPlace(s.moveRight)) s.moveRight else s))
-      case (Rotate,    Some(s)) => gameState.copy(shape = Some(if (canPlace(s.rotateClockwise)) s.rotateClockwise else s))
-      case (Pause, _)  => gameState.copy(paused = true)
-      case (Resume, _) => tick(); gameState.copy(paused = false)
-      case _ => gameState
+      case (Rotate, Some(s))    => gameState.copy(shape = Some(if (canPlace(s.rotateClockwise)) s.rotateClockwise else s))
+      case (Pause, _)           => gameState.copy(paused = true)
+      case (Resume, _)          => gameState.copy(paused = false)
+      case _                    => gameState
     }
 
     val reducibleRows = getReducibleRows(gameState.thePile)
@@ -140,29 +122,52 @@ class Calculator(gameFieldSize: => GameField.GameFieldSize, uiHandler: Handler, 
     if (reducibleRows.nonEmpty)
       reduceThePile(reducibleRows)
     else
-      updateUI(gameState)
+      ui.update(gameState)
   }
 
-  private def handleTick() = gameState.shape match {
-    case Some(shape) => handleUserCommand(MoveDown)
-    case None        => gameState = gameState.copy(shape = Some(makeNewShape))
+  def handleTick() = {
+    gameState = gameState.copy(elapsedTime = gameState.elapsedTime + period)
+    gameState.shape match {
+      case Some(shape) => handleUserCommand(MoveDown)
+      case None => gameState = gameState.copy(shape = Some(makeNewShape))
+    }
+  }
+
+}
+
+
+class CalculatorThread(gameFieldSize: => GameField.GameFieldSize,
+                 ui: UI,
+                 period: FiniteDuration,
+                 initialGameState: GameState) extends Runnable {
+
+  import Calculator._
+
+  var handler: Option[Handler] = None
+  val calculator = new Calculator(gameFieldSize, ui, period, initialGameState)
+
+  def scheduleTick() {
+    val m = new Message
+    m.obj = Tick
+    handler.foreach(_.sendMessageDelayed(m, period.toMillis))
   }
 
   override def run() {
     Looper.prepare()
     handler = Some(new Handler {
       override def handleMessage(msg: Message) = msg.obj match {
-        case m: UserCommand if !gameState.gameOver => handleUserCommand(m)
-        case Tick           if  gameState.paused   => /** nothing to do */
-        case Tick           if !gameState.gameOver =>
-          gameState = gameState.copy(elapsedTime = gameState.elapsedTime + period)
-          handleTick()
-          tick()
-        case GameOver => gameState = gameState.copy(gameOver = true); updateUI(gameState)
+        case m: UserCommand if !calculator.gameState.gameOver =>
+          if (m.isInstanceOf[Resume.type])
+            scheduleTick()
+          calculator.handleUserCommand(m)
+        case Tick           if  calculator.gameState.paused   => /** nothing to do */
+        case Tick           if !calculator.gameState.gameOver =>
+          calculator.handleTick()
+          scheduleTick()
         case _        =>
       }
     })
-    tick()
+    scheduleTick()
     Looper.loop()
   }
 }

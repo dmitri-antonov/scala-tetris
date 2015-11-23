@@ -21,7 +21,7 @@ object GameField {
   case object Restart
 
   case class GameFieldSize(width: Int, height: Int)
-  case class CalculatorState(calculator: Calculator, thread: Thread)
+  case class CalculatorState(calculator: CalculatorThread, thread: Thread)
 }
 
 class GameField(context: Context, attrs: AttributeSet) extends View(context, attrs) {
@@ -69,7 +69,7 @@ class GameField(context: Context, attrs: AttributeSet) extends View(context, att
   private def restartGame(): CalculatorState = {
     Log.e(TAG, "restarting game")
 
-    val calculator = new Calculator(GameFieldSize(widthInBlocks, heightInBlocks), uiHandler, period = 1 second)
+    val calculator = new CalculatorThread(GameFieldSize(widthInBlocks, heightInBlocks), RealUI(uiHandler), period = 1 second, GameState())
     val calcThread = new Thread(calculator)
     calcThread.start()
 
